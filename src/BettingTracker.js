@@ -185,33 +185,6 @@ const BettingTracker = () => {
     return bets.filter(bet => bet.date === today).length;
   }, [bets]);
 
-  const extractDateFromHeaderText = (text) => {
-    if (!text) return null;
-
-    const months = {
-      'jan': 0, 'fev': 1, 'mar': 2, 'abr': 3, 'mai': 4, 'jun': 5,
-      'jul': 6, 'ago': 7, 'set': 8, 'out': 9, 'nov': 10, 'dez': 11
-    };
-    
-    // Tenta encontrar "DD Mês" ex: "21 Jun"
-    const match = text.match(/(\d{1,2})\s(Jan|Fev|Mar|Abr|Mai|Jun|Jul|Ago|Set|Out|Nov|Dez)/i);
-    
-    if (match) {
-        const day = parseInt(match[1], 10);
-        const monthName = match[2].toLowerCase();
-        const month = months[monthName];
-        
-        const currentYear = new Date().getFullYear();
-        // Lógica simples: se o mês da aposta for maior que o mês atual, assume o ano anterior.
-        const year = new Date().getMonth() < month ? currentYear - 1 : currentYear;
-
-        const date = new Date(year, month, day);
-        return date.toISOString().split('T')[0]; // Retorna no formato YYYY-MM-DD
-    }
-    
-    return null;
-  };
-
   const parseBet365HTML = async (htmlString, selectedDateForImport) => {
     try {
         const parser = new DOMParser();
@@ -372,9 +345,7 @@ const BettingTracker = () => {
                 }
             }
             
-            // Tenta extrair a data do texto do header. Usa a data da importação como fallback.
-            const extractedDate = extractDateFromHeaderText(selection);
-            const betDate = extractedDate || selectedDateForImport;
+            const betDate = selectedDateForImport;
 
             let championship = "Aguardando busca...";
             if (homeTeam.toLowerCase().includes("flamengo") || awayTeam.toLowerCase().includes("flamengo")) championship = "Brasileirão Série A (Simulado)";

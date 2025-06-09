@@ -3,7 +3,7 @@ import { Upload, Plus, X, CalendarDays } from 'lucide-react';
 import BettingTable from './BettingTable';
 import ImportModal from './ImportModal';
 
-const Dashboard = ({
+const Principal = ({
   onShowAddForm,
   bets,
   onFileUpload,
@@ -124,4 +124,4 @@ const Dashboard = ({
   );
 };
 
-export default Dashboard; 
+export default Principal; 

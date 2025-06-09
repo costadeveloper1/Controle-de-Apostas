@@ -19,8 +19,78 @@ const BettingTracker = () => {
     }
   });
 
+  const [activeFilter, setActiveFilter] = useState('Over 0.5');
+
+  useEffect(() => {
+    if (location.pathname === '/') {
+      setActiveFilter('Over 0.5');
+    }
+  }, [location.pathname]);
+
+  useEffect(() => {
+    // Rotina de limpeza para remover duplicados existentes e normalizar categorias
+    const seenIds = new Set();
+    const uniqueBets = [];
+    let needsUpdate = false;
+
+    for (const bet of bets) {
+      if (bet.id && !seenIds.has(bet.id)) {
+        seenIds.add(bet.id);
+        let updatedBet = { ...bet };
+        
+        // Normalização de categorias
+        if (updatedBet.marketCategory) {
+          const originalCategory = updatedBet.marketCategory;
+          let newCategory = originalCategory.trim();
+          if (newCategory.startsWith('0-10')) {
+            newCategory = '0-10';
+          }
+          if (newCategory !== originalCategory) {
+            updatedBet.marketCategory = newCategory;
+            needsUpdate = true;
+          }
+        }
+        uniqueBets.push(updatedBet);
+      } else {
+        needsUpdate = true; // Encontrou um duplicado ou aposta sem ID, precisa de atualização
+      }
+    }
+
+    if (needsUpdate) {
+      setBets(uniqueBets);
+    }
+  }, []); // Executa apenas uma vez para limpar os dados iniciais
+
   useEffect(() => {
     localStorage.setItem('bets', JSON.stringify(bets));
+  }, [bets]);
+
+  const marketCategoriesToShow = useMemo(() => {
+    return ["Over 0.5", "0-10", "Asiáticos HT", "Over 1.5"];
+  }, []);
+
+  useEffect(() => {
+    const needsUpdate = bets.some(
+      (bet) => (bet.marketCategory && bet.marketCategory.startsWith('0-10') && bet.marketCategory !== '0-10') || bet.marketCategory === 'Minutos'
+    );
+  
+    if (needsUpdate) {
+      const updatedBets = bets.map((bet) => {
+        if (bet.marketCategory && bet.marketCategory.startsWith('0-10')) {
+          return { ...bet, marketCategory: '0-10' };
+        }
+        if (bet.marketCategory === 'Minutos') {
+          // Os mercados de minutos que não são "0-10" serão mapeados para "Over 0.5" se a seleção for "Mais de 0.0"
+          if(bet.selection === 'Mais de 0.0') {
+            return { ...bet, marketCategory: 'Over 0.5' };
+          }
+          const { marketCategory, ...rest } = bet;
+          return rest;
+        }
+        return bet;
+      });
+      setBets(updatedBets);
+    }
   }, [bets]);
 
   const [showAddForm, setShowAddForm] = useState(false);
@@ -175,10 +245,24 @@ const BettingTracker = () => {
     };
   }, [bets]);
 
+  const handleFilterChange = (filter) => {
+    setActiveFilter(currentFilter => (currentFilter === filter ? 'Todos' : filter));
+  };
+
+  const addOrUpdateBet = (bet) => {
+    setBets(prevBets => {
+      const existingIds = new Set(prevBets.map(b => b.id));
+      const newBetsToAdd = [bet].filter(b => !existingIds.has(b.id));
+      if (newBetsToAdd.length > 0) {
+        return [...newBetsToAdd, ...prevBets];
+      }
+      return prevBets;
+    });
+  };
+
   const uniqueMarketCategories = useMemo(() => {
-    const categories = bets.map(bet => bet.marketCategory).filter(Boolean);
-    return ['Todos', ...Array.from(new Set(categories)).sort()];
-  }, [bets]);
+    return marketCategoriesToShow;
+  }, [marketCategoriesToShow]);
 
   const todayBetsCount = useMemo(() => {
     const today = new Date().toISOString().split('T')[0];
@@ -212,17 +296,26 @@ const BettingTracker = () => {
             }
 
             let marketMinutes = "Não especificado"; 
+            let marketCategory = 'Outros';
             const marketDescriptionLower = marketDescriptionText.toLowerCase();
-            if (marketDescriptionLower.includes("1º tempo") && marketDescriptionLower.includes("escanteios asiáticos")) {
+
+            if (marketDescriptionLower.includes("10 minutos - escanteios - 3 opções")) {
+                marketMinutes = "0-10";
+                marketCategory = "0-10";
+            } else if (marketDescriptionLower.includes("1º tempo") && marketDescriptionLower.includes("escanteios asiáticos")) {
                 marketMinutes = "40-Int";
+                marketCategory = "Asiáticos HT";
             } else if (marketDescriptionLower.includes("primeiro tempo") && marketDescriptionLower.includes("escanteios asiáticos")) {
                 marketMinutes = "40-Int";
+                marketCategory = "Asiáticos HT";
             } else if (marketDescriptionLower.includes("total de escanteios")) {
                 marketMinutes = "80-Fim";
+                marketCategory = "Asiáticos FT";
             } else if (marketDescriptionLower.includes("escanteios asiáticos") && 
                        !marketDescriptionLower.includes("1º tempo") && 
                        !marketDescriptionLower.includes("primeiro tempo")) {
                 marketMinutes = "80-Fim";
+                marketCategory = "Asiáticos FT";
             }
             
             if (marketMinutes === "Não especificado") {
@@ -232,6 +325,7 @@ const BettingTracker = () => {
                     const matchMinute = subHeaderText.match(/(\d{1,2}:\d{2}\s*-\s*\d{1,2}:\d{2})/);
                     if (matchMinute && matchMinute[1]) {
                         marketMinutes = matchMinute[1].replace(/\s+/g, '');
+                        marketCategory = 'Minutos';
                     }
                 } else {
                     const participantSpanEl = item.querySelector('.myb-BetParticipant_ParticipantSpan');
@@ -240,34 +334,26 @@ const BettingTracker = () => {
                         const matchMinute = participantSpanText.match(/(\d{1,2}:\d{2}\s*-\s*\d{1,2}:\d{2})/);
                         if (matchMinute && matchMinute[1]) {
                             marketMinutes = matchMinute[1].replace(/\s+/g, '');
+                            marketCategory = 'Minutos';
                         }
                     }
                 }
+            }
+
+            const selectionEl = item.querySelector('.myb-SettledBetItemHeader_SubHeaderText');
+            const selection = selectionEl ? selectionEl.textContent.trim() : "Seleção não encontrada";
+
+            if (marketCategory === 'Minutos' && selection === 'Mais de 0.0') {
+              marketCategory = 'Over 0.5';
+            } else if (marketCategory === 'Minutos' && selection === 'Mais de 1.0') {
+              marketCategory = 'Over 1.5';
             }
             
             if (marketMinutes === "Não especificado" && !marketDescriptionLower.includes("mais de") && !marketDescriptionLower.includes("menos de")) {
                  continue; 
             }
 
-            let marketCategory = 'Outros';
-            if (marketMinutes !== "Não especificado" && !marketMinutes.includes("-")) {
-                marketCategory = 'Minutos';
-            } else if (marketDescriptionLower.includes("escanteios asiáticos")) {
-                if (marketDescriptionLower.includes("1º tempo") || marketDescriptionLower.includes("primeiro tempo")) {
-                    marketCategory = "Asiáticos HT";
-                } else {
-                    marketCategory = "Asiáticos FT";
-                }
-            } else if (marketDescriptionLower.includes("para marcar") && marketDescriptionLower.includes("0-10")) {
-                 marketCategory = "0-10";
-            }
-            
-            if (marketCategory === 'Outros' && marketMinutes === "Não especificado" && !marketDescriptionLower.includes("mais de") && !marketDescriptionLower.includes("menos de")) {
-                 continue; 
-            }
-
             const stakeEl = item.querySelector('.myb-SettledBetItemHeader_Text');
-            const selectionEl = item.querySelector('.myb-SettledBetItemHeader_SubHeaderText');
             const oddEl = item.querySelector('.myb-BetParticipant_HeaderOdds');
             const team1NameEl = item.querySelector('.myb-BetParticipant_Team1Name');
             const team2NameEl = item.querySelector('.myb-BetParticipant_Team2Name');
@@ -283,7 +369,6 @@ const BettingTracker = () => {
 
             const homeTeam = team1NameEl ? team1NameEl.textContent.trim() : "Time Casa não encontrado";
             const awayTeam = team2NameEl ? team2NameEl.textContent.trim() : "Time Visitante não encontrado";
-            const selection = selectionEl ? selectionEl.textContent.trim() : "Seleção não encontrada";
             const oddText = oddEl ? oddEl.textContent.trim() : '0';
             const oddValue = parseFloat(oddText.replace(',', '.')) || 0;
 
@@ -405,10 +490,10 @@ const BettingTracker = () => {
   const handleFileUpload = async (file, selectedDateForImport) => {
     clearImportFeedback();
     if (!selectedDateForImport) {
-      setImportFeedback({ type: 'error', message: 'Por favor, selecione uma data para as apostas.' });
+      setImportFeedback({ type: 'error', message: 'Por favor, selecione uma data para a importação.' });
       return;
     }
-    if (!file || file.type !== "text/html") {
+    if (!file) {
       setImportFeedback({ type: 'error', message: 'Por favor, selecione um arquivo HTML válido.' });
       return;
     }
@@ -416,32 +501,29 @@ const BettingTracker = () => {
     try {
       const htmlString = await new Promise((resolve, reject) => {
         const reader = new FileReader();
-        reader.onload = (e) => resolve(e.target.result);
+        reader.onload = (event) => resolve(event.target.result);
         reader.onerror = (error) => reject(error);
         reader.readAsText(file);
       });
-      const parsedBets = await parseBet365HTML(htmlString, selectedDateForImport);
-      if (parsedBets && parsedBets.length > 0) {
-        setBets(prevBets => {
-          const existingIds = new Set(prevBets.map(bet => bet.id));
-          const newBetsToAdd = parsedBets.filter(bet => !existingIds.has(bet.id));
-          if (newBetsToAdd.length > 0) {
-            setImportFeedback({ type: 'success', message: `${newBetsToAdd.length} novas apostas importadas com sucesso para ${selectedDateForImport}!` });
-            return [...newBetsToAdd, ...prevBets];
-          }
-          setImportFeedback({ type: 'info', message: 'Nenhuma nova aposta encontrada ou todas já existem.' });
-          return prevBets;
-        });
+      const newBets = await parseBet365HTML(htmlString, selectedDateForImport);
+      
+      let addedCount = 0;
+      setBets(currentBets => {
+          const currentBetIds = new Set(currentBets.map(b => b.id));
+          const betsToAdd = newBets.filter(b => b.id && !currentBetIds.has(b.id));
+          addedCount = betsToAdd.length;
+          return [...currentBets, ...betsToAdd];
+      });
+
+      if (addedCount > 0) {
+        setImportFeedback({ type: 'success', message: `${addedCount} de ${newBets.length} apostas foram importadas com sucesso para o dia ${new Date(selectedDateForImport + 'T00:00:00').toLocaleDateString('pt-BR')}!` });
       } else {
-        if (!importFeedback.message && parsedBets.length === 0) {
-            setImportFeedback({ type: 'info', message: 'Nenhuma aposta válida para importação foi encontrada no arquivo.' });
-        }
+        setImportFeedback({ type: 'info', message: 'Nenhuma aposta nova encontrada para importação.' });
       }
     } catch (error) {
       console.error("Erro em handleFileUpload:", error);
-      setImportFeedback({ type: 'error', message: `Erro ao processar o arquivo: ${error.message || 'Erro desconhecido.'}` });
-    }
-    finally {
+      setImportFeedback({ type: 'error', message: `Erro ao processar o arquivo: ${error.message}` });
+    } finally {
       setIsLoading(false);
     }
   };

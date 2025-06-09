@@ -77,6 +77,16 @@ const AddBetForm = ({
             <input type="text" name="awayTeam" id="awayTeam" value={formData.awayTeam} onChange={(e) => handleInputChange('awayTeam', e.target.value)} className="w-full p-2.5 rounded bg-gray-700 text-gray-100 border border-gray-600 focus:ring-red-500 focus:border-red-500 placeholder-gray-400" placeholder="Nome do time visitante" required />
           </div>
           <div>
+            <label htmlFor="market" className="block text-sm font-medium text-gray-300 mb-1">Mercado</label>
+            <select name="market" id="market" value={formData.market} onChange={(e) => handleInputChange('market', e.target.value)} className="w-full p-2.5 rounded bg-gray-700 text-gray-100 border border-gray-600 focus:ring-red-500 focus:border-red-500" required>
+              <option value="" disabled>Selecione o mercado</option>
+              <option value="Over 0.5">Over 0.5</option>
+              <option value="0-10">0-10</option>
+              <option value="Asiáticos HT">Asiáticos HT</option>
+              <option value="Over 1.5">Over 1.5</option>
+            </select>
+          </div>
+          <div>
             <label htmlFor="marketMinutes" className="block text-sm font-medium text-gray-300 mb-1">Intervalo de Minutos</label>
             <select name="marketMinutes" id="marketMinutes" value={formData.marketMinutes} onChange={(e) => handleInputChange('marketMinutes', e.target.value)} className="w-full p-2.5 rounded bg-gray-700 text-gray-100 border border-gray-600 focus:ring-red-500 focus:border-red-500" required>
               <option value="" disabled>Selecione o intervalo</option>

@@ -17,16 +17,9 @@ const Principal = ({
 }) => {
   const [showImportModal, setShowImportModal] = useState(false);
   const [filterDate, setFilterDate] = useState('');
-  const [activeMarketTab, setActiveMarketTab] = useState('Todos');
+  const [activeMarketTab, setActiveMarketTab] = useState('Over 0.5');
 
-  const categoryDisplayMap = {
-    'Todos': 'Over 0.5',
-    'Minutos': 'Minutos',
-    'Asiáticos HT': 'Asiáticos HT',
-    'Asiáticos FT': '0-10',
-    '0-10': '0-10',
-    'Outros': 'Over 1.5'
-  };
+  const marketTabs = ['Over 0.5', '0-10', 'Asiáticos HT', 'Over 1.5'];
 
   const handleImportClick = () => {
     setShowImportModal(true);
@@ -44,8 +37,8 @@ const Principal = ({
       filtered = filtered.filter(bet => bet.date === filterDate);
     }
 
-    if (activeMarketTab !== 'Todos') {
-      filtered = filtered.filter(bet => bet.marketCategory === activeMarketTab);
+    if (activeMarketTab !== 'Over 0.5') {
+      filtered = filtered.filter(bet => bet.market === activeMarketTab);
     }
     
     return filtered;
@@ -57,23 +50,21 @@ const Principal = ({
         <div className="flex flex-wrap items-center justify-between mb-4 gap-y-3">
           
           <div className="w-full sm:w-auto sm:flex-1 order-2 sm:order-1">
-            {uniqueMarketCategories && uniqueMarketCategories.length > 1 && (
-              <div className="flex items-center border border-gray-700 rounded-lg p-0.5 max-w-max">
-                {uniqueMarketCategories.map(category => (
-                  <button
-                    key={category}
-                    onClick={() => setActiveMarketTab(category)}
-                    className={`px-3 py-1 text-xs sm:text-sm font-medium rounded-md transition-colors ${
-                      activeMarketTab === category
-                        ? 'bg-red-600 text-white'
-                        : 'text-gray-300 hover:bg-gray-700'
-                    }`}
-                  >
-                    {categoryDisplayMap[category] || category}
-                  </button>
-                ))}
-              </div>
-            )}
+            <div className="flex items-center border border-gray-700 rounded-lg p-0.5 max-w-max">
+              {marketTabs.map(category => (
+                <button
+                  key={category}
+                  onClick={() => setActiveMarketTab(category)}
+                  className={`px-3 py-1 text-xs sm:text-sm font-medium rounded-md transition-colors ${
+                    activeMarketTab === category
+                      ? 'bg-red-600 text-white'
+                      : 'text-gray-300 hover:bg-gray-700'
+                  }`}
+                >
+                  {category}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="w-full sm:w-auto sm:flex-1 text-center order-1 sm:order-2">

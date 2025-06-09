@@ -33,6 +33,7 @@ const BettingTracker = () => {
     championship: '',
     homeTeam: '',
     awayTeam: '',
+    market: '',
     marketMinutes: '',
     odd: '',
     result: '',
@@ -58,6 +59,7 @@ const BettingTracker = () => {
         championship: editingBet.championship,
         homeTeam: editingBet.homeTeam,
         awayTeam: editingBet.awayTeam,
+        market: editingBet.market || '',
         marketMinutes: editingBet.marketMinutes,
         odd: String(editingBet.odd).replace('.', ','), 
         result: editingBet.result || (editingBet.status === 'won' ? 'Ganha' : editingBet.status === 'lost' ? 'Perdida' : editingBet.status === 'void' ? 'Devolvida' : editingBet.status === 'cashed_out' ? 'Cashout' : ''),
@@ -91,8 +93,8 @@ const BettingTracker = () => {
   };
 
   const handleSubmit = () => {
-    if (!formData.homeTeam || !formData.awayTeam || !formData.marketMinutes || !formData.odd || !formData.result || !formData.championship || !formData.stake) {
-      alert('Preencha todos os campos obrigatórios: Data, Campeonato, Time da Casa, Time Visitante, Intervalo de Minutos, Odd, Resultado e Entrada!');
+    if (!formData.homeTeam || !formData.awayTeam || !formData.market || !formData.marketMinutes || !formData.odd || !formData.result || !formData.championship || !formData.stake) {
+      alert('Preencha todos os campos obrigatórios: Data, Campeonato, Time da Casa, Time Visitante, Mercado, Intervalo de Minutos, Odd, Resultado e Entrada!');
       return;
     }
 
@@ -103,6 +105,7 @@ const BettingTracker = () => {
       championship: formData.championship,
       homeTeam: formData.homeTeam,
       awayTeam: formData.awayTeam,
+      market: formData.market,
       marketMinutes: formData.marketMinutes,
       odd: parseFloat(String(formData.odd).replace(',', '.')),
       result: formData.result,

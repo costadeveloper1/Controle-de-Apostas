@@ -82,6 +82,20 @@ const BettingTable = ({ bets, onEditBet, onDeleteBet, filterDate, setFilterDate 
     return s ? s.charAt(0).toUpperCase() + s.slice(1) : 'Pendente'; 
   };
 
+  const formatMarketColumn = (bet) => {
+    if (bet.marketCategory === 'zeroToTen') {
+      const marketLower = bet.market.toLowerCase();
+      const selectionLower = bet.selection.toLowerCase();
+
+      if (marketLower.includes('time da casa')) return 'CASA';
+      if (marketLower.includes('time visitante')) return 'FORA';
+      
+      if (selectionLower.includes('mais de 1.0')) return '1';
+      if (selectionLower.includes('mais de 0.0')) return '0';
+    }
+    return formatMarketMinutes(bet.marketMinutes);
+  };
+
   // Ordenar as apostas por data, times e mercado
   const sortedBets = [...bets].sort((a, b) => {
     // Primeiro, comparar as datas (ordem decrescente)
@@ -175,7 +189,7 @@ const BettingTable = ({ bets, onEditBet, onDeleteBet, filterDate, setFilterDate 
               <td className="px-3 sm:px-4 py-2 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-gray-200 text-right">
                 {typeof bet.stake === 'number' ? `R$ ${bet.stake.toFixed(2).replace('.', ',')}` : 'N/A'}
               </td>
-              <td className="px-3 sm:px-4 py-2 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-gray-200 text-center">{formatMarketMinutes(bet.marketMinutes)}</td>
+              <td className="px-3 sm:px-4 py-2 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-gray-200 text-center">{formatMarketColumn(bet)}</td>
               <td className="px-3 sm:px-4 py-2 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-gray-200 text-center">{typeof bet.odd === 'number' ? bet.odd.toFixed(2).replace('.', ',') : 'N/A'}</td>
               <td className={`px-3 sm:px-4 py-2 sm:py-3 whitespace-nowrap text-xs sm:text-sm font-semibold ${getStatusColor(bet.status, bet.result, bet.profit)} text-center`}>
                 {formatStatusDisplay(bet.status, bet.result, bet.profit)}

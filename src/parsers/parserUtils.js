@@ -75,13 +75,11 @@ export const extractMarketInfo = (betElement, selectedDateForImport, parserType)
   const selectionTextLower = selectionText.toLowerCase();
   let marketMinutes = 'N/A';
 
-  if (marketDescriptionLower.includes('10 minutos - escanteios - 3 opções')) {
-    marketMinutes = '00:00-09:59';
-  } else if (marketDescriptionLower.includes('escanteios')) {
+  if (marketDescriptionLower.includes('escanteios')) {
     const combinedTextForTimeSearch = `${selectionText} ${marketDescription}`;
-    const timePattern = combinedTextForTimeSearch.match(/\d{2}:\d{2}\s*-\s*\d{2}:\d{2}/);
+    const timePattern = combinedTextForTimeSearch.match(/\\d{2}:\\d{2}\\s*-\\s*\\d{2}:\\d{2}/);
     if (timePattern) {
-      marketMinutes = timePattern[0].replace(/\s/g, '');
+      marketMinutes = timePattern[0].replace(/\\s/g, '');
     } else if (selectionTextLower.includes('40-int')) {
       marketMinutes = '40-Int';
     } else if (selectionTextLower.includes('80-fim')) {

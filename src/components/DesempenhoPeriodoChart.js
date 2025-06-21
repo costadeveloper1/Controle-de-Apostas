@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { Bar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -20,6 +20,93 @@ ChartJS.register(
 );
 
 const DesempenhoPeriodoChart = ({ filteredBets, startDate, endDate }) => {
+  // O hook useCallback foi movido para o topo do componente para seguir as "Regras dos Hooks" do React.
+  // Desta forma, ele é chamado incondicionalmente a cada renderização.
+  const calculateProfit = useCallback((odd, status, stake) => {
+    const numericOdd = parseFloat(String(odd).replace(',', '.'));
+    const numericStake = parseFloat(stake);
+
+    if (!numericOdd || !numericStake || !status) return 0;
+
+    if (status === 'won') {
+      return (numericOdd - 1) * numericStake;
+    } else if (status === 'lost') {
+      return -numericStake;
+    } else if (status === 'void' || status === 'cashout') {
+      return 0;
+    }
+    return 0;
+  }, []);
+
+  const stats = useMemo(() => {
+    // Esta função auxiliar fornece retrocompatibilidade enquanto os dados estão mistos.
+    // Permite-nos obter um status padronizado para qualquer aposta, antiga ou nova.
+    const getBetStatus = (bet) => {
+      if (bet.status) return bet.status;
+      if (bet.result) {
+        const resultLower = bet.result.toLowerCase();
+        if (resultLower.includes('ganha') || resultLower.includes('green')) return 'won';
+        if (resultLower.includes('perdida') || resultLower.includes('red')) return 'lost';
+        if (resultLower.includes('devolvida') || resultLower.includes('void')) return 'void';
+        if (resultLower.includes('cashout')) return 'cashout';
+      }
+      return 'unknown';
+    };
+
+    const totalBets = filteredBets.length;
+    const greenBetsCount = filteredBets.filter(bet => getBetStatus(bet) === 'won').length;
+    const redBetsCount = filteredBets.filter(bet => getBetStatus(bet) === 'lost').length;
+    
+    const relevantBetsForWinRate = greenBetsCount + redBetsCount;
+
+    const totalProfit = filteredBets.reduce((sum, bet) => {
+      // Se o lucro já estiver calculado e guardado, usa-o.
+      if (bet.profit !== undefined && bet.profit !== null) {
+        return sum + bet.profit;
+      }
+      // Caso contrário, calcula-o em tempo real para retrocompatibilidade.
+      const status = getBetStatus(bet);
+      const odd = parseFloat(String(bet.odd).replace(',', '.')) || 0;
+      const stake = parseFloat(String(bet.stake).replace(',', '.')) || 0;
+
+      if (status === 'won') return sum + (odd - 1) * stake;
+      if (status === 'lost') return sum - stake;
+      return sum;
+    }, 0);
+
+    const winRate = relevantBetsForWinRate > 0 ? (greenBetsCount / relevantBetsForWinRate * 100) : 0;
+    
+    const greenBetsList = filteredBets.filter(bet => getBetStatus(bet) === 'won');
+    const greenBetsOddsSum = greenBetsList.reduce((sum, bet) => sum + (parseFloat(String(bet.odd).replace(',', '.')) || 0), 0);
+    const averageOdd = greenBetsCount > 0 ? (greenBetsOddsSum / greenBetsCount) : 0;
+
+    const totalInvestido = filteredBets.reduce((sum, bet) => sum + (parseFloat(String(bet.stake).replace(',', '.')) || 0), 0);
+    const roi = totalInvestido > 0 ? (totalProfit / totalInvestido * 100) : 0;
+
+    return {
+      totalProfit: totalProfit,
+      totalBets: totalBets,
+      greenBets: greenBetsCount,
+      redBets: redBetsCount, 
+      winRate: winRate,
+      averageOdd: averageOdd,
+      totalInvestido: totalInvestido,
+      roi: roi
+    };
+  }, [filteredBets]);
+
+  const initialFormData = useMemo(() => ({
+    date: new Date().toISOString().split('T')[0],
+    championship: '',
+    homeTeam: '',
+    awayTeam: '',
+    market: '',
+    marketMinutes: '',
+    odd: '',
+    status: '',
+    stake: 100
+  }), []);
+
   if (!filteredBets || filteredBets.length === 0) {
     return <p className="text-gray-400 text-center py-8">Dados insuficientes para exibir o desempenho por período.</p>;
   }
@@ -44,7 +131,7 @@ const DesempenhoPeriodoChart = ({ filteredBets, startDate, endDate }) => {
       const month = date.getUTCMonth();
       const key = `${year}-${String(month + 1).padStart(2, '0')}`;
       if (!performance[key]) performance[key] = { profit: 0, year, month };
-      performance[key].profit += parseFloat(bet.profit || 0);
+      performance[key].profit += calculateProfit(bet.odd, bet.status, bet.stake);
     });
     sortedKeys = Object.keys(performance).sort();
   
@@ -62,7 +149,7 @@ const DesempenhoPeriodoChart = ({ filteredBets, startDate, endDate }) => {
         const weekStartDate = getWeekStart(bet.date);
         const key = weekStartDate.toISOString().split('T')[0]; // Chave YYYY-MM-DD da segunda
         if (!performance[key]) performance[key] = { profit: 0, date: weekStartDate };
-        performance[key].profit += parseFloat(bet.profit || 0);
+        performance[key].profit += calculateProfit(bet.odd, bet.status, bet.stake);
     });
     sortedKeys = Object.keys(performance).sort();
 
@@ -71,7 +158,7 @@ const DesempenhoPeriodoChart = ({ filteredBets, startDate, endDate }) => {
     filteredBets.forEach(bet => {
         const key = bet.date; // A própria data YYYY-MM-DD
         if (!performance[key]) performance[key] = { profit: 0 };
-        performance[key].profit += parseFloat(bet.profit || 0);
+        performance[key].profit += calculateProfit(bet.odd, bet.status, bet.stake);
     });
     sortedKeys = Object.keys(performance).sort();
   }

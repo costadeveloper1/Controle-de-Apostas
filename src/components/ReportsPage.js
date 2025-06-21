@@ -29,21 +29,15 @@ const ReportsPage = ({ allBetsFromTracker, uniqueMarketCategories }) => {
   // console.log("--- ReportsPage Iniciada, allBetsFromTracker count:", allBetsFromTracker?.length);
 
   const [activeView, setActiveView] = useState('overview'); // overview, campeonato, mercado, etc.
-
-  // Estados para datas
-  const [inputStartDate, setInputStartDate] = useState('');
-  const [inputEndDate, setInputEndDate] = useState('');
-  const [appliedStartDate, setAppliedStartDate] = useState('');
   const [appliedEndDate, setAppliedEndDate] = useState('');
   const [activeMarketCategory, setActiveMarketCategory] = useState('Todos');
 
   const categoryDisplayMap = {
-    'Todos': 'Over 0.5',
-    'Minutos': 'Minutos',
-    'Asiáticos HT': 'Asiáticos HT',
-    'Asiáticos FT': '0-10',
-    '0-10': '0-10',
-    'Outros': 'Over 1.5'
+    'Todos': 'Geral',
+    'over05': 'Over 0.5',
+    'zeroToTen': '0-10',
+    'asiaticosHT': 'Asiáticos HT',
+    'over15': 'Over 1.5'
   };
 
   useEffect(() => {
@@ -54,8 +48,7 @@ const ReportsPage = ({ allBetsFromTracker, uniqueMarketCategories }) => {
   }, [uniqueMarketCategories, activeMarketCategory]);
 
   const handleFilterApply = () => {
-    setAppliedStartDate(inputStartDate);
-    setAppliedEndDate(inputEndDate);
+    // ... existing code ...
   };
   
   const setPeriodToday = () => {
@@ -248,10 +241,8 @@ const ReportsPage = ({ allBetsFromTracker, uniqueMarketCategories }) => {
                 <button onClick={() => setActiveView('dia_semana')} className="bg-gray-700 hover:bg-gray-600 text-gray-300 text-xs font-semibold p-2 rounded-md flex items-center justify-center gap-2"><CalendarDays size={14}/> Dia da Semana</button>
             </div>
              {activeView !== 'overview' && (
-              <button onClick={() => setActiveView('overview')} className="mt-3 w-full bg-red-700 hover:bg-red-800 text-white text-xs font-semibold p-2 rounded-md flex items-center justify-center gap-2">
-                <BarChartHorizontal size={14} /> Voltar à Visão Geral
-              </button>
-            )}
+              <button onClick={() => setActiveView('overview')} className="mt-2 w-full bg-red-600 hover:bg-red-700 text-white text-xs font-semibold p-2 rounded-md">Ver Visão Geral</button>
+             )}
         </div>
 
         {/* Coluna 4: Top G/P (lg:col-span-4) */}
@@ -260,8 +251,7 @@ const ReportsPage = ({ allBetsFromTracker, uniqueMarketCategories }) => {
         </div>
       </div>
 
-      {/* Área de Conteúdo Dinâmico */}
-      <div className="space-y-6">
+      <div className="bg-gray-800 shadow-lg rounded-lg p-4">
         {renderContent()}
       </div>
     </div>

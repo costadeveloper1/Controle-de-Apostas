@@ -164,8 +164,8 @@ const BettingTable = ({ bets, onEditBet, onDeleteBet, filterDate, setFilterDate 
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-700">
-          {currentBetsToDisplay.map((bet, index) => (
-            <tr key={bet.id || index} className="hover:bg-gray-750 transition-colors duration-150">
+          {currentBetsToDisplay.map((bet) => (
+            <tr key={bet.id} className="hover:bg-gray-750 transition-colors duration-150">
               <td className="px-3 sm:px-4 py-2 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-gray-200 text-center">
                 {bet.date ? new Date(bet.date + 'T00:00:00').toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : 'N/A'}
               </td>

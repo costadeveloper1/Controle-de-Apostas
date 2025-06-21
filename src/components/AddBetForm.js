@@ -24,9 +24,10 @@ const AddBetForm = ({
   }, [formData.odd, formData.result, formData.stake, calculateProfit]);
 
   const resultOptions = useMemo(() => [
-    { value: 'green', label: 'Green (Ganha)' },
-    { value: 'red', label: 'Red (Perdida)' },
-    { value: 'Devolvida', label: 'Devolvida' },
+    { value: 'won', label: 'Green (Ganha)' },
+    { value: 'lost', label: 'Red (Perdida)' },
+    { value: 'void', label: 'Devolvida (Void)' },
+    { value: 'cashout', label: 'Cashout' },
   ], []);
 
   if (!show) {
@@ -102,13 +103,12 @@ const AddBetForm = ({
             <input type="number" step="0.01" name="stake" id="stake" value={formData.stake} onChange={(e) => handleInputChange('stake', e.target.value)} className="w-full p-2.5 rounded bg-gray-700 text-gray-100 border border-gray-600 focus:ring-red-500 focus:border-red-500 placeholder-gray-400" placeholder="Ex: 100" required />
           </div>
           <div>
-            <label htmlFor="result" className="block text-sm font-medium text-gray-300 mb-1">Resultado</label>
-            <select name="result" id="result" value={formData.result} onChange={(e) => handleInputChange('result', e.target.value)} className="w-full p-2.5 rounded bg-gray-700 text-gray-100 border border-gray-600 focus:ring-red-500 focus:border-red-500" required>
+            <label htmlFor="status" className="block text-sm font-medium text-gray-300 mb-1">Resultado</label>
+            <select name="status" id="status" value={formData.status} onChange={(e) => handleInputChange('status', e.target.value)} className="w-full p-2.5 rounded bg-gray-700 text-gray-100 border border-gray-600 focus:ring-red-500 focus:border-red-500" required>
               <option value="" disabled>Selecione o resultado</option>
-              <option value="Ganha">Ganha (Green)</option>
-              <option value="Perdida">Perdida (Red)</option>
-              <option value="Devolvida">Devolvida (Void)</option>
-              <option value="Cashout">Cashout</option>
+              {resultOptions.map(option => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
             </select>
           </div>
         </div>

@@ -6,6 +6,7 @@ import AddBetForm from './components/AddBetForm';
 import Principal from './components/Principal';
 import ReportsPage from './components/ReportsPage';
 import StatsCard from './components/StatsCard';
+import { parsers } from './parsers/parserManager.js';
 
 const BettingTracker = () => {
   const location = useLocation();
@@ -51,6 +52,73 @@ const BettingTracker = () => {
     const allChampionships = bets.map(bet => bet.championship).filter(Boolean);
     return Array.from(new Set(allChampionships)).sort();
   }, [bets]);
+
+  const handleImport = useCallback((parserType, htmlString, importDate) => {
+    setImportFeedback({ type: '', message: '' });
+    setIsLoading(true);
+
+    const parser = parsers[parserType];
+
+    if (!parser) {
+      console.error(`Nenhum parser encontrado para o tipo: ${parserType}`);
+      setImportFeedback({ type: 'error', message: `Erro: Parser para '${parserType}' não foi encontrado.` });
+      setIsLoading(false);
+      return;
+    }
+
+    if (!htmlString || !importDate) {
+        setImportFeedback({ type: 'error', message: 'Por favor, forneça o conteúdo HTML e selecione uma data.' });
+        setIsLoading(false);
+        return;
+    }
+
+    try {
+      const parsedBets = parser(htmlString, importDate);
+
+      if (parsedBets && parsedBets.length > 0) {
+        const newBets = parsedBets.filter(pBet => 
+          !bets.some(eBet => 
+            eBet.match === pBet.match && 
+            eBet.market === pBet.market && 
+            eBet.date === pBet.date &&
+            eBet.odd === pBet.odd &&
+            eBet.stake === pBet.stake &&
+            eBet.homeTeam === pBet.homeTeam &&
+            eBet.awayTeam === pBet.awayTeam &&
+            eBet.marketMinutes === pBet.marketMinutes &&
+            eBet.championship === pBet.championship
+          )
+        );
+
+        if (newBets.length > 0) {
+          setBets(prevBets => [...newBets, ...prevBets]);
+          setImportFeedback({ type: 'success', message: `${newBets.length} de ${parsedBets.length} apostas importadas com sucesso!` });
+        } else {
+          setImportFeedback({ type: 'info', message: 'Nenhuma aposta nova para importar. As apostas já existem.' });
+        }
+      } else {
+        setImportFeedback({ type: 'info', message: 'Nenhuma aposta encontrada no HTML fornecido para este mercado.' });
+      }
+    } catch (error) {
+      console.error("Erro durante o parsing:", error);
+      setImportFeedback({ type: 'error', message: 'Ocorreu um erro ao processar o HTML. Verifique o console.' });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [bets]);
+
+  const handleDeleteBetsByDate = (dateToDelete) => {
+    if (!dateToDelete) {
+      alert("Por favor, selecione uma data para excluir.");
+      return;
+    }
+    const formattedDate = dateToDelete.split('-').reverse().join('/');
+    const userConfirmed = window.confirm(`Tem certeza que deseja excluir todas as apostas do dia ${formattedDate}? Esta ação não pode ser desfeita.`);
+    if (userConfirmed) {
+      setBets(prevBets => prevBets.filter(bet => bet.date !== dateToDelete));
+      setImportFeedback({ type: 'success', message: `Apostas do dia ${formattedDate} foram excluídas.` });
+    }
+  };
 
   useEffect(() => {
     if (editingBet) {
@@ -188,267 +256,6 @@ const BettingTracker = () => {
     return bets.filter(bet => bet.date === today).length;
   }, [bets]);
 
-  const parseBet365HTML = async (htmlString, selectedDateForImport) => {
-    try {
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(htmlString, "text/html");
-        const betElements = doc.querySelectorAll('.myb-SettledBetItem');
-        const parsedBetsPromises = []; 
-
-        console.log("Total de elementos .myb-SettledBetItem encontrados:", betElements.length);
-
-        for (let i = 0; i < betElements.length; i++) {
-            const item = betElements[i];
-            
-            if (item.textContent && item.textContent.includes("Reembolso(Push)")) {
-                continue; 
-            }
-            
-            const marketDescriptionEl = item.querySelector('.myb-BetParticipant_MarketDescription');
-            let marketDescriptionText = marketDescriptionEl ? marketDescriptionEl.textContent.trim() : '';
-
-            if (marketDescriptionText) {
-              const unwantedPattern = /Número de Cartões aos \d+ Minutos/gi;
-              marketDescriptionText = marketDescriptionText.replace(unwantedPattern, '').trim();
-              marketDescriptionText = marketDescriptionText.replace(/\s{2,}/g, ' ').trim();
-              marketDescriptionText = marketDescriptionText.split('\n').map(line => line.trim()).filter(line => line).join(' ');
-            }
-
-            let marketMinutes = "Não especificado"; 
-            const marketDescriptionLower = marketDescriptionText.toLowerCase();
-            if (marketDescriptionLower.includes("1º tempo") && marketDescriptionLower.includes("escanteios asiáticos")) {
-                marketMinutes = "40-Int";
-            } else if (marketDescriptionLower.includes("primeiro tempo") && marketDescriptionLower.includes("escanteios asiáticos")) {
-                marketMinutes = "40-Int";
-            } else if (marketDescriptionLower.includes("total de escanteios")) {
-                marketMinutes = "80-Fim";
-            } else if (marketDescriptionLower.includes("escanteios asiáticos") && 
-                       !marketDescriptionLower.includes("1º tempo") && 
-                       !marketDescriptionLower.includes("primeiro tempo")) {
-                marketMinutes = "80-Fim";
-            }
-            
-            if (marketMinutes === "Não especificado") {
-                const subHeaderTextEl = item.querySelector('.myb-SettledBetItemHeader_SubHeaderText');
-                if (subHeaderTextEl) {
-                    const subHeaderText = subHeaderTextEl.textContent.trim();
-                    const matchMinute = subHeaderText.match(/(\d{1,2}:\d{2}\s*-\s*\d{1,2}:\d{2})/);
-                    if (matchMinute && matchMinute[1]) {
-                        marketMinutes = matchMinute[1].replace(/\s+/g, '');
-                    }
-                } else {
-                    const participantSpanEl = item.querySelector('.myb-BetParticipant_ParticipantSpan');
-                    if (participantSpanEl) {
-                        const participantSpanText = participantSpanEl.textContent.trim();
-                        const matchMinute = participantSpanText.match(/(\d{1,2}:\d{2}\s*-\s*\d{1,2}:\d{2})/);
-                        if (matchMinute && matchMinute[1]) {
-                            marketMinutes = matchMinute[1].replace(/\s+/g, '');
-                        }
-                    }
-                }
-            }
-            
-            if (marketMinutes === "Não especificado" && !marketDescriptionLower.includes("mais de") && !marketDescriptionLower.includes("menos de")) {
-                 continue; 
-            }
-
-            let marketCategory = 'Outros';
-            if (marketMinutes !== "Não especificado" && !marketMinutes.includes("-")) {
-                marketCategory = 'Minutos';
-            } else if (marketDescriptionLower.includes("escanteios asiáticos")) {
-                if (marketDescriptionLower.includes("1º tempo") || marketDescriptionLower.includes("primeiro tempo")) {
-                    marketCategory = "Asiáticos HT";
-                } else {
-                    marketCategory = "Asiáticos FT";
-                }
-            } else if (marketDescriptionLower.includes("para marcar") && marketDescriptionLower.includes("0-10")) {
-                 marketCategory = "0-10";
-            }
-            
-            if (marketCategory === 'Outros' && marketMinutes === "Não especificado" && !marketDescriptionLower.includes("mais de") && !marketDescriptionLower.includes("menos de")) {
-                 continue; 
-            }
-
-            const stakeEl = item.querySelector('.myb-SettledBetItemHeader_Text');
-            const selectionEl = item.querySelector('.myb-SettledBetItemHeader_SubHeaderText');
-            const oddEl = item.querySelector('.myb-BetParticipant_HeaderOdds');
-            const team1NameEl = item.querySelector('.myb-BetParticipant_Team1Name');
-            const team2NameEl = item.querySelector('.myb-BetParticipant_Team2Name');
-            const winLossIndicator = item.querySelector('.myb-WinLossIndicator');
-            const returnAmountEl = item.querySelector('.myb-SettledBetItemFooter_BetInformationText');
-
-            const stakeText = stakeEl ? stakeEl.textContent.trim() : '0';
-            let stakeValue = 0;
-            const stakeMatch = stakeText.match(/[\d,.]+/);
-            if (stakeMatch && stakeMatch[0]) {
-                stakeValue = parseFloat(stakeMatch[0].replace(/\./g, '').replace(',', '.'));
-            }
-
-            const homeTeam = team1NameEl ? team1NameEl.textContent.trim() : "Time Casa não encontrado";
-            const awayTeam = team2NameEl ? team2NameEl.textContent.trim() : "Time Visitante não encontrado";
-            const selection = selectionEl ? selectionEl.textContent.trim() : "Seleção não encontrada";
-            const oddText = oddEl ? oddEl.textContent.trim() : '0';
-            const oddValue = parseFloat(oddText.replace(',', '.')) || 0;
-
-            let returnValue = 0;
-            if (returnAmountEl) {
-                const returnText = returnAmountEl.textContent.trim();
-                const returnMatch = returnText.match(/[\d,.]+/);
-                if (returnMatch && returnMatch[0]) {
-                    returnValue = parseFloat(returnMatch[0].replace(/\./g, '').replace(',', '.'));
-                }
-            }
-
-            let finalOdd = oddValue;
-            let internalStatus = 'pending';
-            let profit = 0;
-
-            if (winLossIndicator) {
-                if (winLossIndicator.classList.contains('myb-WinLossIndicator-won')) {
-                    internalStatus = 'won'; profit = returnValue - stakeValue;
-                } else if (winLossIndicator.classList.contains('myb-WinLossIndicator-lost')) {
-                    internalStatus = 'lost'; profit = -stakeValue;
-                } else if (winLossIndicator.classList.contains('myb-WinLossIndicator-void')) {
-                    internalStatus = 'void'; profit = 0; finalOdd = 1.0;
-                } else if (winLossIndicator.classList.contains('myb-WinLossIndicator-cashout')) {
-                    internalStatus = 'cashed_out'; profit = returnValue - stakeValue;
-                    if (profit > 0 && stakeValue > 0) finalOdd = (profit / stakeValue) + 1;
-                    else if (profit === 0) finalOdd = 1.0;
-                } else {
-                    const statusLabelEl = item.querySelector('.myb-SettledBetItem_BetStateLabel');
-                    const statusText = statusLabelEl ? statusLabelEl.textContent.trim().toLowerCase() : '';
-                    if (statusText.includes('ganha')) { internalStatus = 'won'; profit = returnValue - stakeValue; }
-                    else if (statusText.includes('perdida')) { internalStatus = 'lost'; profit = -stakeValue; }
-                    else if (statusText.includes('devolvida')) { internalStatus = 'void'; profit = 0; finalOdd = 1.0; }
-                    else if (statusText.includes('encerrada')) { internalStatus = 'cashed_out'; profit = returnValue - stakeValue;
-                        if (profit > 0 && stakeValue > 0) finalOdd = (profit / stakeValue) + 1;
-                        else if (profit === 0) finalOdd = 1.0;
-                    }
-                }
-            } else {
-                const statusLabelEl = item.querySelector('.myb-SettledBetItem_BetStateLabel');
-                if (statusLabelEl) {
-                    const statusText = statusLabelEl.textContent.trim().toLowerCase();
-                    if (statusText.includes('ganha')) { internalStatus = 'won'; profit = returnValue - stakeValue; }
-                    else if (statusText.includes('perdida')) { internalStatus = 'lost'; profit = -stakeValue; }
-                    else if (statusText.includes('devolvida')) { internalStatus = 'void'; profit = 0; finalOdd = 1.0; }
-                    else if (statusText.includes('encerrada')) { internalStatus = 'cashed_out'; profit = returnValue - stakeValue;
-                        if (profit > 0 && stakeValue > 0) finalOdd = (profit / stakeValue) + 1;
-                        else if (profit === 0) finalOdd = 1.0;
-                    }
-                } else {
-                }
-            }
-            
-            const betDate = selectedDateForImport;
-
-            let championship = "Aguardando busca...";
-            if (homeTeam.toLowerCase().includes("flamengo") || awayTeam.toLowerCase().includes("flamengo")) championship = "Brasileirão Série A (Simulado)";
-            else if (homeTeam.toLowerCase().includes("real madrid") || awayTeam.toLowerCase().includes("real madrid")) championship = "La Liga (Simulado)";
-            else if (homeTeam.toLowerCase().includes("manchester city") || awayTeam.toLowerCase().includes("manchester city")) championship = "Premier League (Simulado)";
-            else championship = "Campeonato Genérico (Simulado)";
-
-            const bet = {
-                id: `${betDate}-${homeTeam}-${awayTeam}-${marketMinutes}-${selection}-${stakeValue}`.replace(/\s+/g, '-').toLowerCase(),
-                date: betDate,
-                championship: championship,
-                homeTeam: homeTeam,
-                awayTeam: awayTeam,
-                market: marketDescriptionText,
-                marketCategory: marketCategory,
-                marketMinutes: marketMinutes,
-                stake: stakeValue,
-                odd: parseFloat(finalOdd.toFixed(4)),
-                status: internalStatus, 
-                profit: parseFloat(profit.toFixed(2)),
-                selection: selection,
-            };
-            
-            if (stakeValue > 0 && finalOdd > 0 && homeTeam !== "Time Casa não encontrado" && marketMinutes !== "Não especificado") {
-                parsedBetsPromises.push(Promise.resolve(bet));
-            } else {
-            }
-        } 
-
-        const parsedBets = await Promise.all(parsedBetsPromises);
-        if (parsedBets.length === 0) {
-            console.log("Nenhuma aposta válida foi encontrada no HTML.");
-        }
-        return parsedBets;
-
-    } catch (error) {
-        console.error("Erro ao processar o HTML da Bet365:", error);
-        return [];
-    }
-  };
-
-  const clearImportFeedback = useCallback(() => {
-    setImportFeedback({ type: '', message: '' });
-  }, [setImportFeedback]); 
-
-  const handleDeleteBetsByDate = useCallback((dateToDelete) => {
-    if (!dateToDelete) {
-      setImportFeedback({ type: 'error', message: 'Nenhuma data selecionada para exclusão.' });
-      return;
-    }
-    const confirmDelete = window.confirm(`Tem certeza que deseja excluir TODAS as apostas do dia ${new Date(dateToDelete + 'T00:00:00').toLocaleDateString('pt-BR')}?`);
-    if (confirmDelete) {
-      const actualDeletedCount = bets.filter(bet => bet.date === dateToDelete).length;
-      setBets(prevBets => prevBets.filter(bet => bet.date !== dateToDelete));
-      if (actualDeletedCount > 0) {
-        setImportFeedback({ type: 'success', message: `${actualDeletedCount} aposta(s) do dia ${new Date(dateToDelete + 'T00:00:00').toLocaleDateString('pt-BR')} foram excluídas.` });
-      } else {
-        setImportFeedback({ type: 'info', message: `Nenhuma aposta encontrada para o dia ${new Date(dateToDelete + 'T00:00:00').toLocaleDateString('pt-BR')} para excluir.` });
-      }
-    } else {
-      setImportFeedback({ type: 'info', message: 'Exclusão cancelada.' });
-    }
-  }, [bets, setBets, setImportFeedback]);
-
-  const handleFileUpload = async (file, selectedDateForImport) => {
-    clearImportFeedback();
-    if (!selectedDateForImport) {
-      setImportFeedback({ type: 'error', message: 'Por favor, selecione uma data para as apostas.' });
-      return;
-    }
-    if (!file || file.type !== "text/html") {
-      setImportFeedback({ type: 'error', message: 'Por favor, selecione um arquivo HTML válido.' });
-      return;
-    }
-    setIsLoading(true);
-    try {
-      const htmlString = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (e) => resolve(e.target.result);
-        reader.onerror = (error) => reject(error);
-        reader.readAsText(file);
-      });
-      const parsedBets = await parseBet365HTML(htmlString, selectedDateForImport);
-      if (parsedBets && parsedBets.length > 0) {
-        setBets(prevBets => {
-          const existingIds = new Set(prevBets.map(bet => bet.id));
-          const newBetsToAdd = parsedBets.filter(bet => !existingIds.has(bet.id));
-          if (newBetsToAdd.length > 0) {
-            setImportFeedback({ type: 'success', message: `${newBetsToAdd.length} novas apostas importadas com sucesso para ${selectedDateForImport}!` });
-            return [...newBetsToAdd, ...prevBets];
-          }
-          setImportFeedback({ type: 'info', message: 'Nenhuma nova aposta encontrada ou todas já existem.' });
-          return prevBets;
-        });
-      } else {
-        if (!importFeedback.message && parsedBets.length === 0) {
-            setImportFeedback({ type: 'info', message: 'Nenhuma aposta válida para importação foi encontrada no arquivo.' });
-        }
-      }
-    } catch (error) {
-      console.error("Erro em handleFileUpload:", error);
-      setImportFeedback({ type: 'error', message: `Erro ao processar o arquivo: ${error.message || 'Erro desconhecido.'}` });
-    }
-    finally {
-      setIsLoading(false);
-    }
-  };
-
   let profitIcon;
   let profitIconColor = 'text-gray-400';
   if (stats.totalProfit > 0) {
@@ -524,21 +331,19 @@ const BettingTracker = () => {
       <main className="flex-grow max-w-full mx-auto px-2 sm:px-4 py-4 sm:py-6 w-full">
         <Routes>
           <Route 
-            index
+            path="/" 
             element={
-              <Principal 
-                stats={stats}
-                todayBetsCount={todayBetsCount}
-                onShowAddForm={handleOpenAddForm}
+              <Principal
                 bets={bets}
-                onFileUpload={handleFileUpload}
-                onEditBet={handleEditBet}
-                onDeleteBet={handleDeleteBet}
-                isImporting={isLoading}
-                importFeedback={importFeedback}
-                clearImportFeedback={clearImportFeedback}
-                onDeleteBetsByDate={handleDeleteBetsByDate}
+                onEdit={handleEditBet}
+                onDelete={handleDeleteBet}
+                onShowAddForm={handleOpenAddForm}
+                stats={stats}
                 uniqueMarketCategories={uniqueMarketCategories}
+                onImport={handleImport}
+                isLoading={isLoading}
+                importFeedback={importFeedback}
+                onDeleteBetsByDate={handleDeleteBetsByDate}
               />
             } 
           />

@@ -528,14 +528,13 @@ const BettingTracker = () => {
                 todayBetsCount={todayBetsCount}
                 onShowAddForm={handleOpenAddForm}
                 bets={bets}
-                onFileUpload={handleFileUpload}
                 onEditBet={handleEditBet}
                 onDeleteBet={handleDeleteBet}
-                isImporting={isLoading}
-                importFeedback={importFeedback}
-                clearImportFeedback={clearImportFeedback}
-                onDeleteBetsByDate={handleDeleteBetsByDate}
                 uniqueMarketCategories={uniqueMarketCategories}
+                onImport={handleFileUpload}
+                isLoading={isLoading}
+                importFeedback={importFeedback}
+                onDeleteBetsByDate={handleDeleteBetsByDate}
               />
             } 
           />

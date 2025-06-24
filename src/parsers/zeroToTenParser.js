@@ -32,9 +32,17 @@ const parseSingleBet = (betElement, importDate) => {
     return null;
   }
 
-  const team1 = betElement.querySelector('.myb-BetParticipant_Team1Name')?.textContent.trim() || '';
-  const team2 = betElement.querySelector('.myb-BetParticipant_Team2Name')?.textContent.trim() || '';
-  const match = (team1 && team2) ? `${team1} vs ${team2}` : 'Jogo não identificado';
+  const homeTeam =
+    betElement.querySelector('.myb-BetParticipant_Team1Name')?.textContent.trim() ||
+    betElement.querySelector('.m1-MiniMatchLiveSoccerModule_Team1Name')?.textContent.trim() ||
+    'N/A';
+
+  const awayTeam =
+    betElement.querySelector('.myb-BetParticipant_Team2Name')?.textContent.trim() ||
+    betElement.querySelector('.m1-MiniMatchLiveSoccerModule_Team2Name')?.textContent.trim() ||
+    'N/A';
+
+  const match = (homeTeam && awayTeam) ? `${homeTeam} vs ${awayTeam}` : 'Jogo não identificado';
 
   const championshipEl = betElement.querySelector('.myb-Market-breadcrumb');
   const championship = championshipEl ? championshipEl.textContent.trim().split('/').pop().trim() : 'Campeonato não identificado';

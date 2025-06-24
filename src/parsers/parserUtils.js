@@ -43,8 +43,14 @@ const extractDateFromHeaderText = (headerText) => {
 };
 
 export const extractMarketInfo = (betElement, selectedDateForImport, parserType) => {
-  const homeTeam = betElement.querySelector('.myb-BetParticipant_Team1Name')?.textContent.trim() || 'N/A';
-  const awayTeam = betElement.querySelector('.myb-BetParticipant_Team2Name')?.textContent.trim() || 'N/A';
+  const homeTeam =
+    betElement.querySelector('.myb-BetParticipant_Team1Name')?.textContent.trim() ||
+    betElement.querySelector('.m1-MiniMatchLiveSoccerModule_Team1Name')?.textContent.trim() ||
+    'N/A';
+  const awayTeam =
+    betElement.querySelector('.myb-BetParticipant_Team2Name')?.textContent.trim() ||
+    betElement.querySelector('.m1-MiniMatchLiveSoccerModule_Team2Name')?.textContent.trim() ||
+    'N/A';
   const selectionText = betElement.querySelector('.myb-BetParticipant_ParticipantSpan')?.textContent.trim() || betElement.querySelector('.myb-SettledBetItemHeader_SubHeaderText')?.textContent.trim() || '';
   const marketDescription = betElement.querySelector('.myb-BetParticipant_MarketDescription')?.textContent.trim() || '';
   const championship = betElement.querySelector('.myb-BetParticipant_SubHeaderLeft')?.textContent.trim() || 'N/A';

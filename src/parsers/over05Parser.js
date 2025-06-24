@@ -25,7 +25,7 @@ const normalizeStatus = (statusText) => {
 };
 
 /**
- * Faz o parsing de uma string HTML da Bet365 para extrair as apostas.
+ * Faz o parsing de uma string HTML da Bet365 para extrair as apostas Over 0.5.
  * @param {string} htmlText - O conteúdo HTML da página de apostas resolvidas.
  * @param {string} selectedDate - A data a ser associada com as apostas importadas (formato YYYY-MM-DD).
  * @returns {Array<Object>} - Uma lista de objetos de aposta padronizados.
@@ -38,15 +38,32 @@ export const parseOver05Bets = (htmlText, selectedDate) => {
   const allBetsData = [];
 
   betElements.forEach((betElement) => {
-    // Chama o nosso "Engenheiro" para analisar a aposta, informando o tipo de mercado
-    const betData = extractMarketInfo(betElement, selectedDate, 'over05');
+    // Extrai informações básicas
+    const selectionText = betElement.querySelector('.myb-BetParticipant_ParticipantSpan')?.textContent.trim() || '';
+    const marketDescription = betElement.querySelector('.myb-BetParticipant_MarketDescription')?.textContent.trim() || '';
+    const subHeaderText = betElement.querySelector('.myb-SettledBetItemHeader_SubHeaderText')?.textContent.trim() || '';
 
-    // FILTRO FINAL: Apenas importar apostas que foram categorizadas com sucesso.
-    // Isto ignora automaticamente "Escanteios Asiáticos", "Cartões", etc.,
-    // pois a "Decisão" para eles no nosso log era "N/A".
-    if (betData && betData.marketMinutes !== 'N/A') {
-      allBetsData.push(betData);
+    // Checagem robusta para "Mais de 0.5" e escanteios
+    const isMaisDe05 = /mais\s*de\s*0\.5/i.test(selectionText) || /mais\s*de\s*0\.5/i.test(subHeaderText);
+    const isEscanteios = /escanteio/i.test(marketDescription);
+
+    if (isMaisDe05 && isEscanteios) {
+      // Extrai o intervalo de minutos
+      let marketMinutes = 'N/A';
+      const timeMatch = (selectionText + ' ' + subHeaderText).match(/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/);
+      if (timeMatch) {
+        marketMinutes = `${timeMatch[1]}-${timeMatch[2]}`.replace(/\s/g, '');
+      }
+      // Usa extractMarketInfo para preencher os outros campos
+      const betData = extractMarketInfo(betElement, selectedDate, 'over05');
+      betData.marketCategory = 'over05';
+      betData.marketMinutes = marketMinutes;
+      // Só adiciona se o intervalo de minutos foi encontrado
+      if (betData.marketMinutes !== 'N/A') {
+        allBetsData.push(betData);
+      }
     }
+    // Caso contrário, ignora a aposta (não é Over 0.5 de escanteios)
   });
 
   return allBetsData;

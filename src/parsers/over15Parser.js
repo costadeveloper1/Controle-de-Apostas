@@ -88,7 +88,7 @@ const parseSingleBet = (betElement, importDate) => {
     match,
     championship,
     market,
-    marketCategory: "Over 1.5", // Categoria fixa para este parser
+    marketCategory: "over15", // Categoria padronizada para este parser
     marketMinutes,
     odd,
     stake,

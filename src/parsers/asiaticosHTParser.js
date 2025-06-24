@@ -82,7 +82,7 @@ const parseSingleBet = (betElement, importDate) => {
     match,
     championship,
     market,
-    marketCategory: "Asiáticos HT", // Categoria fixa para este parser
+    marketCategory: "asiaticosHT", // Categoria padronizada para este parser
     marketMinutes,
     odd,
     stake,

@@ -105,13 +105,24 @@ export const parseAsiaticosHTBets = (htmlText, selectedDate) => {
   const allBetsData = [];
 
   betElements.forEach((betElement) => {
-    // Chama a função de extração principal, passando o tipo de parser
-    const betData = extractMarketInfo(betElement, selectedDate, 'asiaticosHT');
-    
-    // FILTRO FINAL: Apenas importar apostas de Escanteios Asiáticos HT
-    if (betData && betData.marketCategory === 'asiaticosHT' && betData.marketMinutes !== 'N/A') {
+    // Extrai os textos relevantes
+    const selectionText = betElement.querySelector('.myb-BetParticipant_ParticipantSpan')?.textContent.trim() || '';
+    const marketDescription = betElement.querySelector('.myb-BetParticipant_MarketDescription')?.textContent.trim() || '';
+
+    // Normalização para comparar ignorando acentos e maiúsculas/minúsculas
+    const normalize = str => str ? str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim() : '';
+    const isAsiaticosHT = normalize(marketDescription) === normalize('1º Tempo - Escanteios Asiáticos');
+    const linhaMatch = selectionText.match(/mais\s*de\s*([\d,.]+)/i);
+    const linha = linhaMatch ? linhaMatch[1].replace('.', ',') : null;
+
+    if (isAsiaticosHT && linha) {
+      // Extrai os dados normalmente
+      const betData = extractMarketInfo(betElement, selectedDate, 'asiaticosHT');
+      betData.marketCategory = 'asiaticosHT';
+      betData.marketMinutes = linha;
       allBetsData.push(betData);
     }
+    // Caso contrário, ignora a aposta (não é Asiáticos HT ou não tem linha válida)
   });
 
   return allBetsData;

@@ -43,10 +43,15 @@ const BettingTracker = () => {
 
   const [formData, setFormData] = useState(initialFormData);
 
-  const timeIntervals = useMemo(() => [
-    '0-9:59', '10-19:59', '20-29:59', '30-39:59', '40-49:59',
-    '50-59:59', '60-69:59', '70-79:59', '80-fim'
-  ], []);
+  const timeIntervals = useMemo(() => {
+    if (formData.market === 'Over 1.5') {
+      return ['0-14', '15-29', '30-Int', '45-60', '60-75', '80-fim'];
+    }
+    return [
+      '0-9:59', '10-19:59', '20-29:59', '30-39:59', '40-49:59',
+      '50-59:59', '60-69:59', '70-79:59', '80-fim'
+    ];
+  }, [formData.market]);
 
   const uniqueChampionships = useMemo(() => {
     const allChampionships = bets.map(bet => bet.championship).filter(Boolean);

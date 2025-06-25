@@ -109,6 +109,13 @@ export const parseAsiaticosHTBets = (htmlText, selectedDate) => {
     const selectionText = betElement.querySelector('.myb-BetParticipant_ParticipantSpan')?.textContent.trim() || '';
     const marketDescription = betElement.querySelector('.myb-BetParticipant_MarketDescription')?.textContent.trim() || '';
 
+    // NOVO: Extrai status diretamente do HTML
+    const statusText = betElement.querySelector('.myb-HalfAndHalfPill_TextStatusLHS')?.textContent.trim() || '';
+    if (statusText.toLowerCase() === 'reembolso(push)') {
+      // Ignora apostas com status Reembolso(Push)
+      return;
+    }
+
     // Normalização para comparar ignorando acentos e maiúsculas/minúsculas
     const normalize = str => str ? str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim() : '';
     const isAsiaticosHT = normalize(marketDescription) === normalize('1º Tempo - Escanteios Asiáticos');

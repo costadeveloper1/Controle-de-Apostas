@@ -2,6 +2,8 @@ import { parseOver05Bets } from './over05Parser.js';
 import { parseZeroToTenBets } from './zeroToTenParser.js';
 import { parseAsiaticosHTBets } from './asiaticosHTParser.js';
 import { parseOver15Bets } from './over15Parser.js';
+import { parseRaceBets } from './raceParser.js';
+import { parseOver46Bets } from './over46Parser.js';
 
 /**
  * Um objeto central que mapeia identificadores de tipo de aposta
@@ -18,5 +20,7 @@ export const parsers = {
   'zeroToTen': parseZeroToTenBets,
   'asiaticosHT': parseAsiaticosHTBets,
   'over15': parseOver15Bets,
+  'race': parseRaceBets,
+  'plus46': parseOver46Bets,
   // Adicione outros parsers aqui no futuro
 }; 

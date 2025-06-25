@@ -42,7 +42,9 @@ const Principal = ({
     { key: 'over05', label: 'Over 0.5' },
     { key: 'zeroToTen', label: '0-10' },
     { key: 'asiaticosHT', label: 'Asiáticos HT' },
-    { key: 'over15', label: 'Over 1.5' }
+    { key: 'over15', label: 'Over 1.5' },
+    { key: 'race', label: 'RACE' },
+    { key: 'plus46', label: '+ 4/6' }
   ];
 
   const handleOpenImportModal = () => {
@@ -82,7 +84,7 @@ const Principal = ({
     }
   };
 
-  const marketTabs = ['Over 0.5', '0-10', 'Asiáticos HT', 'Over 1.5'];
+  const marketTabs = ['Over 0.5', '0-10', 'Asiáticos HT', 'Over 1.5', 'RACE', '+ 4/6'];
 
   const handleCloseImportModal = () => {
     setImportModalOpen(false);

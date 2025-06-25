@@ -29,6 +29,9 @@ const ReportsPage = ({ allBetsFromTracker, uniqueMarketCategories }) => {
   // console.log("--- ReportsPage Iniciada, allBetsFromTracker count:", allBetsFromTracker?.length);
 
   const [activeView, setActiveView] = useState('overview'); // overview, campeonato, mercado, etc.
+  const [inputStartDate, setInputStartDate] = useState('');
+  const [inputEndDate, setInputEndDate] = useState('');
+  const [appliedStartDate, setAppliedStartDate] = useState('');
   const [appliedEndDate, setAppliedEndDate] = useState('');
   const [activeMarketCategory, setActiveMarketCategory] = useState('Todos');
 

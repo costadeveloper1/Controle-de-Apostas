@@ -40,7 +40,9 @@ const ReportsPage = ({ allBetsFromTracker, uniqueMarketCategories }) => {
     'over05': 'Over 0.5',
     'zeroToTen': '0-10',
     'asiaticosHT': 'Asiáticos HT',
-    'over15': 'Over 1.5'
+    'over15': 'Over 1.5',
+    'race': 'RACE',
+    'plus46': '+ 4/6'
   };
 
   useEffect(() => {
@@ -207,18 +209,19 @@ const ReportsPage = ({ allBetsFromTracker, uniqueMarketCategories }) => {
                    </button>
                 </div>
               </div>
-              <div className="flex items-center shadow-lg rounded-md overflow-hidden mt-3">
-                 {(uniqueMarketCategories || []).map((category) => (
+              <div className="flex items-center shadow-lg rounded-md overflow-hidden mt-3 flex-nowrap gap-0">
+                 {[{key:'Todos',label:'Geral'},{key:'over05',label:'Over 0.5'},{key:'zeroToTen',label:'0-10'},{key:'asiaticosHT',label:'Asiáticos HT'},{key:'over15',label:'Over 1.5'},{key:'race',label:'RACE'},{key:'plus46',label:'+ 4/6'}].map((cat, idx, arr) => (
                     <button
-                      key={category}
-                      onClick={() => setActiveMarketCategory(category)}
-                      className={`flex-1 px-2 py-2 text-xs font-bold transition-colors border-r border-gray-900/50 last:border-r-0
-                        ${activeMarketCategory === category
+                      key={cat.key}
+                      onClick={() => setActiveMarketCategory(cat.key)}
+                      className={`px-1.5 py-0.5 text-[10px] font-bold transition-colors border-r border-gray-900/30 last:border-r-0 rounded-none whitespace-nowrap
+                        ${activeMarketCategory === cat.key
                           ? 'bg-red-600 text-white'
                           : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}
                       `}
+                      style={{minWidth:'40px',maxWidth:'80px'}}
                     >
-                      {categoryDisplayMap[category] || category}
+                      {cat.label}
                     </button>
                   ))}
               </div>

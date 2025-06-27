@@ -83,7 +83,7 @@ const BettingTable = ({ bets, onEditBet, onDeleteBet, filterDate, setFilterDate 
   };
 
   const formatMarketColumn = (bet) => {
-    if (bet.marketCategory === 'race') {
+    if (bet.marketCategory === 'race' || bet.marketCategory === 'plus46') {
       return bet.market || 'N/A';
     }
     if (bet.marketCategory === 'zeroToTen') {

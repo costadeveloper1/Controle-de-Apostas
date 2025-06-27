@@ -34,21 +34,27 @@ export const parseOver46Bets = (htmlText, selectedDate) => {
     if (statusText.toLowerCase() === 'reembolso(push)') {
       return;
     }
-    const isMaisDe4 = /mais\s*de\s*4\.0/i.test(selectionText);
-    const isMaisDe6 = /mais\s*de\s*6\.0/i.test(selectionText);
-    const isEscanteios = /escanteio/i.test(marketDescription);
-    const isTotalDeEscanteios = /total de escanteios/i.test(marketDescription);
-    if ((isMaisDe4 || isMaisDe6) && isEscanteios && isTotalDeEscanteios) {
-      const betData = extractMarketInfo(betElement, selectedDate, 'plus46');
-      if (isMaisDe4) {
-        betData.market = '+4';
-      } else if (isMaisDe6) {
-        betData.market = '+6';
-      }
-      betData.marketCategory = 'plus46';
-      if (!('cf' in betData)) betData.cf = '';
-      allBetsData.push(betData);
+    let mesa = '';
+    if (/mais\s*de\s*4\.0/i.test(selectionText)) {
+      mesa = '+4';
+    } else if (/mais\s*de\s*6\.0/i.test(selectionText)) {
+      mesa = '+6';
+    } else if (/mais\s*de\s*8\.0/i.test(selectionText)) {
+      mesa = '+8';
+    } else {
+      return;
     }
+    let cf = '';
+    if (/time da casa/i.test(marketDescription)) {
+      cf = 'CASA';
+    } else if (/time visitante/i.test(marketDescription)) {
+      cf = 'FORA';
+    }
+    const betData = extractMarketInfo(betElement, selectedDate, 'plus46');
+    betData.market = mesa;
+    betData.marketCategory = 'plus46';
+    betData.cf = cf;
+    allBetsData.push(betData);
   });
   return allBetsData.filter(bet => bet.status !== 'void');
 }; 

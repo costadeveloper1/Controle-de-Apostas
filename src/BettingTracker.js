@@ -302,7 +302,7 @@ const BettingTracker = () => {
       </div>
 
       <div className="bg-gray-700 border-b border-gray-600">
-        <div className="max-w-full mx-auto px-4">
+        <div className="max-w-full mx-auto px-4 flex items-center justify-between">
           <nav className="flex space-x-6 sm:space-x-8 justify-center sm:justify-start">
             <NavLink
               to={dashboardLinkPath}
@@ -330,6 +330,13 @@ const BettingTracker = () => {
               Relatórios
             </NavLink>
           </nav>
+          <button
+            className="ml-auto bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-5 rounded-md transition-colors text-sm"
+            style={{ minWidth: '120px' }}
+            // onClick={handleOpenExportModal} // Função a ser implementada
+          >
+            Exportar
+          </button>
         </div>
       </div>
 

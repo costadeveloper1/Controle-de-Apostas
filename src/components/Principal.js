@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
-import { Upload, Plus, X, CalendarDays } from 'lucide-react';
+import { Upload, Plus, X, CalendarDays, FileText } from 'lucide-react';
 import BettingTable from './BettingTable';
+import ExportModal from './ExportModal';
 
 const formatDateForInput = (date) => {
   if (!date) return '';
@@ -37,6 +38,9 @@ const Principal = ({
 
   const [filterDate, setFilterDate] = useState('');
   const [activeMarketTab, setActiveMarketTab] = useState('Over 0.5');
+  
+  const [isExportModalOpen, setExportModalOpen] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   
   const availableParsers = [
     { key: 'over05', label: 'Over 0.5' },
@@ -88,6 +92,24 @@ const Principal = ({
 
   const handleCloseImportModal = () => {
     setImportModalOpen(false);
+  };
+
+  const handleOpenExportModal = () => {
+    setExportModalOpen(true);
+  };
+
+  const handleCloseExportModal = () => {
+    setExportModalOpen(false);
+  };
+
+  const handleExport = (params) => {
+    // Aqui será implementada a lógica de exportação
+    setIsExporting(true);
+    setTimeout(() => {
+      setIsExporting(false);
+      setExportModalOpen(false);
+      // Adicionar feedback futuramente
+    }, 1200);
   };
 
   const filteredDashboardBets = useMemo(() => {
@@ -161,6 +183,13 @@ const Principal = ({
               >
                 <Upload size={16} className="mr-1 sm:mr-2" />
                 Importar
+              </button>
+              <button
+                onClick={handleOpenExportModal}
+                className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-3 sm:px-4 rounded-md flex items-center justify-center text-xs sm:text-sm"
+              >
+                <FileText size={16} className="mr-1 sm:mr-2" />
+                Exportar
               </button>
               <button
                 onClick={onShowAddForm}
@@ -265,6 +294,12 @@ const Principal = ({
           </div>
         </div>
       )}
+      <ExportModal
+        isOpen={isExportModalOpen}
+        onClose={handleCloseExportModal}
+        onExport={handleExport}
+        isExporting={isExporting}
+      />
     </div>
   );
 };

@@ -34,6 +34,24 @@ function isSimilar(a, b) {
          a.split(' ')[0] === b.split(' ')[0];
 }
 
+// Função utilitária para normalizar texto
+function normalizeText(str) {
+  return str
+    .normalize('NFD').replace(/[0-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// Função utilitária local para normalizar texto
+function normalizeMarketDesc(str) {
+  return str
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // remove só acentos
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 export const parseRaceBets = (htmlText, selectedDate) => {
   const parser = new DOMParser();
   const doc = parser.parseFromString(htmlText, "text/html");
@@ -44,14 +62,16 @@ export const parseRaceBets = (htmlText, selectedDate) => {
   betElements.forEach((betElement) => {
     // Verifica se é aposta do tipo "Primeiro a marcar X Escanteios"
     const marketDescription = betElement.querySelector('.myb-BetParticipant_MarketDescription')?.textContent.trim() || '';
-    const mesaMatch = marketDescription.match(/Primeiro a marcar (\d+) Escanteios/i);
+    const normDesc = normalizeMarketDesc(marketDescription);
+    const mesaMatch = normDesc.match(/primeiro a marcar (\d+) escanteios/i);
     if (!mesaMatch) return; // Não é do tipo Race
-
     const mesa = `Race ${mesaMatch[1]}`;
+    console.log('DEBUG RACE: mesa identificada:', mesa);
 
     // Usa extractMarketInfo para extrair todos os campos padronizados
     const betData = extractMarketInfo(betElement, selectedDate, 'race');
     betData.market = mesa; // Garante que o campo market seja a mesa correta
+    console.log('DEBUG RACE: betData.market final:', betData.market);
     betData.marketCategory = 'race';
     // Preenche o campo cf
     const participant = betElement.querySelector('.myb-BetParticipant_ParticipantSpan')?.textContent.trim() || '';

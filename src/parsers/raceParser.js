@@ -18,6 +18,22 @@ const normalizeStatus = (statusText) => {
   return STATUS_MAP[lowerCaseStatus] || null;
 };
 
+// Função utilitária para normalizar nomes e remover palavras comuns
+function normalizeName(str) {
+  return str
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // remove só acentos
+    .replace(/\b(fc|sc|united|city|club|team)\b/gi, '') // remove palavras comuns
+    .toLowerCase()
+    .replace(/[^a-z0-9 ]/g, '') // remove caracteres especiais
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function isSimilar(a, b) {
+  return a.includes(b) || b.includes(a) ||
+         a.split(' ')[0] === b.split(' ')[0];
+}
+
 export const parseRaceBets = (htmlText, selectedDate) => {
   const parser = new DOMParser();
   const doc = parser.parseFromString(htmlText, "text/html");
@@ -37,7 +53,20 @@ export const parseRaceBets = (htmlText, selectedDate) => {
     const betData = extractMarketInfo(betElement, selectedDate, 'race');
     betData.market = mesa; // Garante que o campo market seja a mesa correta
     betData.marketCategory = 'race';
-    // Mantém o campo cf (Casa/Fora) se já estiver sendo extraído, senão pode ser ajustado depois
+    // Preenche o campo cf
+    const participant = betElement.querySelector('.myb-BetParticipant_ParticipantSpan')?.textContent.trim() || '';
+    const homeTeam = betElement.querySelector('.myb-BetParticipant_Team1Name')?.textContent.trim() || '';
+    const awayTeam = betElement.querySelector('.myb-BetParticipant_Team2Name')?.textContent.trim() || '';
+    const nParticipant = normalizeName(participant);
+    const nHome = normalizeName(homeTeam);
+    const nAway = normalizeName(awayTeam);
+    if (nParticipant && nHome && isSimilar(nParticipant, nHome)) {
+      betData.cf = 'CASA';
+    } else if (nParticipant && nAway && isSimilar(nParticipant, nAway)) {
+      betData.cf = 'FORA';
+    } else {
+      betData.cf = '';
+    }
     allBetsData.push(betData);
   });
 

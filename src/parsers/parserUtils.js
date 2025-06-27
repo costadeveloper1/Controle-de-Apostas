@@ -114,5 +114,10 @@ export const extractMarketInfo = (betElement, selectedDateForImport, parserType)
     resultText: betElement.querySelector('.myb-BetParticipant_ScoreSample')?.textContent.trim() || ''
   };
 
+  // Adiciona o campo 'cf' apenas para os salões RACE e +4/6
+  if (parserType === 'race' || parserType === 'plus46') {
+    betData.cf = '';
+  }
+
   return betData;
 }; 

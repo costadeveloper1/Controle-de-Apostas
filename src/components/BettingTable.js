@@ -140,41 +140,50 @@ const BettingTable = ({ bets, onEditBet, onDeleteBet, filterDate, setFilterDate 
     }
   };
 
+  // Verifica se deve exibir a coluna C/F
+  const showCFColumn = bets.some(bet => bet.marketCategory === 'race' || bet.marketCategory === 'plus46');
+
   return (
     <div className="overflow-x-auto w-full">
       <table className="min-w-full w-full table-auto bg-gray-800 rounded-b-lg">
         <thead className="bg-gray-700">
           <tr>
-            {['DATA', 'CAMPEONATO', 'CASA', 'FORA', 'ENTRADA', 'MERCADO', 'ODD', 'STATUS', 'LUCRO', 'AÇÕES'].map(header => (
-              <th key={header} className="px-3 sm:px-4 py-2 sm:py-3 text-center text-xs sm:text-sm font-semibold text-yellow-400 uppercase tracking-wider whitespace-nowrap">
-                {header === 'DATA' ? (
-                  <div className="flex items-center justify-center gap-2 relative" ref={datePickerRef}>
-                    <span>DATA</span>
-                    <Hourglass size={16} className="cursor-pointer text-yellow-400 hover:text-yellow-300" onClick={() => setIsDatePickerVisible(!isDatePickerVisible)} />
-                    {isDatePickerVisible && (
-                      <div className="absolute top-full mt-2 right-0 z-10 bg-gray-600 p-2 rounded-md shadow-lg">
-                         <div className="relative">
-                           <input
-                              type="date"
-                              id="tableFilterDate"
-                              value={filterDate}
-                              onChange={(e) => setFilterDate(e.target.value)}
-                              className="bg-gray-700 border border-gray-500 text-gray-200 p-1 rounded-md text-sm focus:ring-red-500 focus:border-red-500 w-full"
-                           />
-                           {filterDate && (
-                              <button onClick={() => setFilterDate('')} className="absolute right-1 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white">
-                                <X size={14} />
-                              </button>
-                           )}
-                         </div>
-                      </div>
-                    )}
+            <th className="px-3 sm:px-4 py-2 sm:py-3 text-center text-xs sm:text-sm font-semibold text-yellow-400 uppercase tracking-wider whitespace-nowrap">
+              <div className="flex items-center justify-center gap-2 relative" ref={datePickerRef}>
+                <span>DATA</span>
+                <Hourglass size={16} className="cursor-pointer text-yellow-400 hover:text-yellow-300" onClick={() => setIsDatePickerVisible(!isDatePickerVisible)} />
+                {isDatePickerVisible && (
+                  <div className="absolute top-full mt-2 right-0 z-10 bg-gray-600 p-2 rounded-md shadow-lg">
+                     <div className="relative">
+                       <input
+                          type="date"
+                          id="tableFilterDate"
+                          value={filterDate}
+                          onChange={(e) => setFilterDate(e.target.value)}
+                          className="bg-gray-700 border border-gray-500 text-gray-200 p-1 rounded-md text-sm focus:ring-red-500 focus:border-red-500 w-full"
+                       />
+                       {filterDate && (
+                          <button onClick={() => setFilterDate('')} className="absolute right-1 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white">
+                            <X size={14} />
+                          </button>
+                       )}
+                     </div>
                   </div>
-                ) : (
-                  header
                 )}
-              </th>
-            ))}
+              </div>
+            </th>
+            <th className="px-3 sm:px-4 py-2 sm:py-3 text-center text-xs sm:text-sm font-semibold text-yellow-400 uppercase tracking-wider whitespace-nowrap">CAMPEONATO</th>
+            <th className="px-3 sm:px-4 py-2 sm:py-3 text-center text-xs sm:text-sm font-semibold text-yellow-400 uppercase tracking-wider whitespace-nowrap">CASA</th>
+            <th className="px-3 sm:px-4 py-2 sm:py-3 text-center text-xs sm:text-sm font-semibold text-yellow-400 uppercase tracking-wider whitespace-nowrap">FORA</th>
+            {showCFColumn && (
+              <th className="px-3 sm:px-4 py-2 sm:py-3 text-center text-xs sm:text-sm font-semibold text-yellow-400 uppercase tracking-wider whitespace-nowrap">C/F</th>
+            )}
+            <th className="px-3 sm:px-4 py-2 sm:py-3 text-center text-xs sm:text-sm font-semibold text-yellow-400 uppercase tracking-wider whitespace-nowrap">ENTRADA</th>
+            <th className="px-3 sm:px-4 py-2 sm:py-3 text-center text-xs sm:text-sm font-semibold text-yellow-400 uppercase tracking-wider whitespace-nowrap">MERCADO</th>
+            <th className="px-3 sm:px-4 py-2 sm:py-3 text-center text-xs sm:text-sm font-semibold text-yellow-400 uppercase tracking-wider whitespace-nowrap">ODD</th>
+            <th className="px-3 sm:px-4 py-2 sm:py-3 text-center text-xs sm:text-sm font-semibold text-yellow-400 uppercase tracking-wider whitespace-nowrap">STATUS</th>
+            <th className="px-3 sm:px-4 py-2 sm:py-3 text-center text-xs sm:text-sm font-semibold text-yellow-400 uppercase tracking-wider whitespace-nowrap">LUCRO</th>
+            <th className="px-3 sm:px-4 py-2 sm:py-3 text-center text-xs sm:text-sm font-semibold text-yellow-400 uppercase tracking-wider whitespace-nowrap">AÇÕES</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-700">
@@ -186,6 +195,9 @@ const BettingTable = ({ bets, onEditBet, onDeleteBet, filterDate, setFilterDate 
               <td className="px-3 sm:px-4 py-2 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-gray-200 text-center">{bet.championship || 'N/A'}</td>
               <td className="px-3 sm:px-4 py-2 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-gray-200 text-center">{bet.homeTeam || 'N/A'}</td>
               <td className="px-3 sm:px-4 py-2 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-gray-200 text-center">{bet.awayTeam || 'N/A'}</td>
+              {showCFColumn && (
+                <td className="px-3 sm:px-4 py-2 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-gray-200 text-center">{bet.cf || ''}</td>
+              )}
               <td className="px-3 sm:px-4 py-2 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-gray-200 text-right">
                 {typeof bet.stake === 'number' ? `R$ ${bet.stake.toFixed(2).replace('.', ',')}` : 'N/A'}
               </td>

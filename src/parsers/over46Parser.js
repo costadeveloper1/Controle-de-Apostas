@@ -46,6 +46,7 @@ export const parseOver46Bets = (htmlText, selectedDate) => {
         betData.market = '+6';
       }
       betData.marketCategory = 'plus46';
+      if (!('cf' in betData)) betData.cf = '';
       allBetsData.push(betData);
     }
   });

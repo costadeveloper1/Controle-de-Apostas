@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Upload, Plus, X, CalendarDays, FileText } from 'lucide-react';
 import BettingTable from './BettingTable';
 import ExportModal from './ExportModal';
+import { exportToExcel } from '../utils/exportToExcel';
 
 const formatDateForInput = (date) => {
   if (!date) return '';
@@ -50,6 +51,15 @@ const Principal = ({
     { key: 'race', label: 'RACE' },
     { key: 'plus46', label: '+ 4/6' }
   ];
+
+  const saloesLabels = {
+    over05: 'Over 0.5',
+    zeroToTen: '0-10',
+    asiaticosHT: 'Asiáticos HT',
+    over15: 'Over 1.5',
+    race: 'RACE',
+    plus46: '+ 4/6',
+  };
 
   const handleOpenImportModal = () => {
     setImportModalOpen(true);
@@ -103,13 +113,44 @@ const Principal = ({
   };
 
   const handleExport = (params) => {
-    // Aqui será implementada a lógica de exportação
     setIsExporting(true);
-    setTimeout(() => {
-      setIsExporting(false);
-      setExportModalOpen(false);
-      // Adicionar feedback futuramente
-    }, 1200);
+    if (params.format === 'excel') {
+      // Filtra apostas conforme os salões e datas
+      const { saloes, startDate, endDate } = params;
+      // KPIs básicos
+      const filtered = bets.filter(bet => {
+        if (!bet.date || !bet.marketCategory) return false;
+        if (!saloes.includes(bet.marketCategory)) return false;
+        const betDate = bet.date.includes('/')
+          ? bet.date.split('/').reverse().join('-')
+          : bet.date;
+        return betDate >= startDate && betDate <= endDate;
+      });
+      const totalProfit = filtered.reduce((acc, b) => acc + (parseFloat(b.profit) || 0), 0);
+      const totalBets = filtered.length;
+      const totalStaked = filtered.reduce((acc, b) => acc + (parseFloat(b.stake) || 0), 0);
+      const wonBets = filtered.filter(b => {
+        const status = String(b.status).toLowerCase();
+        const result = String(b.result).toLowerCase();
+        const profit = parseFloat(b.profit) || 0;
+        return status === 'won' || result === 'green' || result === 'ganha' || ((status === 'cashed_out' || result === 'cashout') && profit > 0);
+      }).length;
+      const winRate = totalBets > 0 ? ((wonBets / totalBets) * 100).toFixed(2) : 0;
+      const roi = totalStaked > 0 ? ((totalProfit / totalStaked) * 100).toFixed(2) : 0;
+      const averageOdd = wonBets > 0 ? (filtered.filter(b => b.odd && (String(b.status).toLowerCase() === 'won' || String(b.result).toLowerCase() === 'green' || String(b.result).toLowerCase() === 'ganha')).reduce((acc, b) => acc + parseFloat(b.odd), 0) / wonBets).toFixed(2) : 0;
+      const kpis = { totalProfit, winRate, roi, totalBets, averageOdd, totalStaked };
+      exportToExcel(bets, { saloes, startDate, endDate, saloesLabels, kpis });
+      setTimeout(() => {
+        setIsExporting(false);
+        setExportModalOpen(false);
+      }, 1200);
+    } else {
+      // Futuramente: lógica para Google Sheets
+      setTimeout(() => {
+        setIsExporting(false);
+        setExportModalOpen(false);
+      }, 1200);
+    }
   };
 
   const filteredDashboardBets = useMemo(() => {

@@ -61,7 +61,26 @@ export function exportToExcel(bets, { saloes, startDate, endDate, saloesLabels, 
       };
       if (isRace) row['C/F'] = bet.cf || '';
       row['ENTRADA'] = formatCurrencyBR(bet.stake);
-      row['MERCADO'] = bet.market;
+      // MERCADO: para over05 e asiaticosHT usar marketMinutes, para zeroToTen aplicar lógica especial
+      if (key === 'over05' || key === 'asiaticosHT') {
+        row['MERCADO'] = bet.marketMinutes || '';
+      } else if (key === 'zeroToTen') {
+        const marketLower = (bet.market || '').toLowerCase();
+        const selectionLower = (bet.selection || '').toLowerCase();
+        if (marketLower.includes('time da casa')) {
+          row['MERCADO'] = 'CASA';
+        } else if (marketLower.includes('time visitante')) {
+          row['MERCADO'] = 'FORA';
+        } else if (selectionLower.includes('mais de 1.0')) {
+          row['MERCADO'] = '1';
+        } else if (selectionLower.includes('mais de 0.0')) {
+          row['MERCADO'] = '0';
+        } else {
+          row['MERCADO'] = bet.marketMinutes || '';
+        }
+      } else {
+        row['MERCADO'] = bet.market;
+      }
       row['ODD'] = bet.odd;
       row['STATUS'] = getStatusText(bet);
       row['LUCRO'] = formatCurrencyBR(bet.profit);

@@ -226,18 +226,18 @@ const Principal = ({
                 Importar
               </button>
               <button
-                onClick={handleOpenExportModal}
-                className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-3 sm:px-4 rounded-md flex items-center justify-center text-xs sm:text-sm"
-              >
-                <FileText size={16} className="mr-1 sm:mr-2" />
-                Exportar
-              </button>
-              <button
                 onClick={onShowAddForm}
                 className="bg-gray-600 hover:bg-gray-500 text-gray-100 font-medium py-2 px-3 sm:px-4 rounded-md flex items-center text-xs sm:text-sm"
               >
                 <Plus size={16} className="mr-1 sm:mr-2" />
                 Nova Aposta
+              </button>
+              <button
+                onClick={handleOpenExportModal}
+                className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-3 sm:px-4 rounded-md flex items-center justify-center text-xs sm:text-sm"
+              >
+                <FileText size={16} className="mr-1 sm:mr-2" />
+                Exportar
               </button>
             </div>
           </div>

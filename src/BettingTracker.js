@@ -220,23 +220,26 @@ const BettingTracker = () => {
   };
 
   const stats = useMemo(() => {
-    const totalBets = bets.length;
-    const greenBetsList = bets.filter(bet => bet.status === 'won' || bet.result === 'green' || bet.result === 'Ganha');
+    // Filtra apostas para excluir os salões '0-10' e 'asiaticosHT'
+    const filteredBets = bets.filter(bet => bet.marketCategory !== '0-10' && bet.marketCategory !== 'asiaticosHT');
+
+    const totalBets = filteredBets.length;
+    const greenBetsList = filteredBets.filter(bet => bet.status === 'won' || bet.result === 'green' || bet.result === 'Ganha');
     const greenBetsCount = greenBetsList.length;
-    const redBetsCount = bets.filter(bet => bet.status === 'lost' || bet.result === 'red' || bet.result === 'Perdida').length;
+    const redBetsCount = filteredBets.filter(bet => bet.status === 'lost' || bet.result === 'red' || bet.result === 'Perdida').length;
     
-    const relevantBetsForWinRate = bets.filter(bet => 
+    const relevantBetsForWinRate = filteredBets.filter(bet => 
         (bet.status === 'won' || bet.result === 'green' || bet.result === 'Ganha') || 
         (bet.status === 'lost' || bet.result === 'red' || bet.result === 'Perdida')
     ).length;
 
-    const totalProfit = bets.reduce((sum, bet) => sum + (bet.profit || 0), 0);
+    const totalProfit = filteredBets.reduce((sum, bet) => sum + (bet.profit || 0), 0);
     const winRate = relevantBetsForWinRate > 0 ? (greenBetsCount / relevantBetsForWinRate * 100) : 0;
     
     const greenBetsOddsSum = greenBetsList.reduce((sum, bet) => sum + (parseFloat(String(bet.odd).replace(',', '.')) || 0), 0);
     const averageOdd = greenBetsCount > 0 ? (greenBetsOddsSum / greenBetsCount) : 0;
 
-    const totalInvestido = bets.reduce((sum, bet) => sum + (parseFloat(String(bet.stake).replace(',', '.')) || 0), 0);
+    const totalInvestido = filteredBets.reduce((sum, bet) => sum + (parseFloat(String(bet.stake).replace(',', '.')) || 0), 0);
     const roi = totalInvestido > 0 ? (totalProfit / totalInvestido * 100) : 0;
 
     return {
@@ -330,13 +333,6 @@ const BettingTracker = () => {
               Relatórios
             </NavLink>
           </nav>
-          <button
-            className="ml-auto bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-5 rounded-md transition-colors text-sm"
-            style={{ minWidth: '120px' }}
-            // onClick={handleOpenExportModal} // Função a ser implementada
-          >
-            Exportar
-          </button>
         </div>
       </div>
 

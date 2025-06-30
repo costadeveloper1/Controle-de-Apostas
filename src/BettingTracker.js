@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Routes, Route, NavLink, useLocation } from 'react-router-dom';
 import { Plus, TrendingUp, BarChart3, Target, Instagram, Linkedin, Mail, Twitter, TrendingDown, HelpCircle } from 'lucide-react';
+import { toast } from 'react-toastify';
 
 import AddBetForm from './components/AddBetForm';
 import Principal from './components/Principal';
@@ -67,12 +68,14 @@ const BettingTracker = () => {
     if (!parser) {
       console.error(`Nenhum parser encontrado para o tipo: ${parserType}`);
       setImportFeedback({ type: 'error', message: `Erro: Parser para '${parserType}' não foi encontrado.` });
+      toast.error(`Erro: Parser para '${parserType}' não foi encontrado.`);
       setIsLoading(false);
       return;
     }
 
     if (!htmlString || !importDate) {
         setImportFeedback({ type: 'error', message: 'Por favor, forneça o conteúdo HTML e selecione uma data.' });
+        toast.error('Por favor, forneça o conteúdo HTML e selecione uma data.');
         setIsLoading(false);
         return;
     }
@@ -81,6 +84,23 @@ const BettingTracker = () => {
       const parsedBets = parser(htmlString, importDate);
 
       if (parsedBets && parsedBets.length > 0) {
+        // Validação dos campos obrigatórios
+        parsedBets.forEach((bet, idx) => {
+          const missingFields = [];
+          if (!bet.date) missingFields.push('Data');
+          if (!bet.homeTeam) missingFields.push('Time da Casa');
+          if (!bet.awayTeam) missingFields.push('Time Visitante');
+          if (!bet.stake && bet.stake !== 0) missingFields.push('Entrada');
+          if (!bet.market) missingFields.push('Mercado');
+          if (!bet.odd && bet.odd !== 0) missingFields.push('Odd');
+          if (!bet.result && !bet.status) missingFields.push('Status');
+          // Para RACE e + 4/6, campo C/F obrigatório
+          if ((parserType === 'race' || parserType === 'plus46') && !bet.cf) missingFields.push('C/F');
+          if (missingFields.length > 0) {
+            const idAposta = `${bet.homeTeam || '?'} x ${bet.awayTeam || '?'} (${bet.date || 'data ?'})`;
+            toast.error(`Aposta ${idAposta} está incompleta: faltando ${missingFields.join(', ')}`);
+          }
+        });
         const newBets = parsedBets.filter(pBet => 
           !bets.some(eBet => 
             eBet.match === pBet.match && 
@@ -107,6 +127,7 @@ const BettingTracker = () => {
     } catch (error) {
       console.error("Erro durante o parsing:", error);
       setImportFeedback({ type: 'error', message: 'Ocorreu um erro ao processar o HTML. Verifique o console.' });
+      toast.error('Ocorreu um erro ao processar o HTML. Verifique o console.');
     } finally {
       setIsLoading(false);
     }

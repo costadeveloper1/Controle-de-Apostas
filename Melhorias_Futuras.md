@@ -25,8 +25,9 @@ Este arquivo serve como checklist e documentação das melhorias planejadas para
   - *O que é KPI?* KPI significa "Indicador-Chave de Performance". São métricas que mostram rapidamente como está o desempenho das apostas, como: lucro total, taxa de acerto, ROI, maior sequência de greens/reds, etc. Um dashboard com KPIs mostra esses números em destaque, facilitando a análise rápida, como um painel de carro mostrando velocidade, combustível, etc.
 
 ## ECHO - Sistema de Alertas e Notificações
-- [ ] **Alertas e Notificações**
+- [x] **Alertas e Notificações**
   - *O que é?* São avisos automáticos que aparecem para o usuário quando algo importante acontece, como: aposta importada com erro, meta de lucro atingida, saldo negativo, etc. Pode ser um pop-up, um badge vermelho, ou até um e-mail.
+  - *Status*: Concluído — toasts visuais automáticos implementados para avisar sobre erros de importação de apostas (campos obrigatórios faltando).
   - *Futuro*: Criar uma nova aba de "Apostas Futuras" onde será possível informar os jogos do dia seguinte e configurar alertas automáticos para esses jogos, sendo enviados 1 hora antes e 15 minutos antes do início de cada partida.
 
 ## FOXTROTE - Análise de Mercados Específicos

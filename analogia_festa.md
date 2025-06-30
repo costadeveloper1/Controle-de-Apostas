@@ -1,5 +1,5 @@
 # 🎉 Analogia da Festa — Sistema de Importação e Organização de Apostas
-
+Essa analogia é porque eu não sou programador e preciso de explicações simples do que estamos trabalhando e o que você está alterando.
 ## Personagens e Funções
 
 - **MC (Mestre de Cerimônias) — Você:**  

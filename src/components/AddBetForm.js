@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { X, CalendarDays, Clock, Shield, Users, BarChartBig, TrendingUp, Percent, Edit3, Save, PlusSquare } from 'lucide-react';
+import { toast } from 'react-toastify';
 
 const AddBetForm = ({
   show,
@@ -40,6 +41,43 @@ const AddBetForm = ({
 
   const handleLocalSubmit = (e) => {
     e.preventDefault();
+    // Validação manual dos campos obrigatórios
+    if (!formData.date) {
+      toast.error('Por favor, preencha a data do jogo.');
+      return;
+    }
+    if (!formData.championship) {
+      toast.error('Por favor, preencha o nome do campeonato.');
+      return;
+    }
+    if (!formData.homeTeam) {
+      toast.error('Por favor, preencha o nome do time da casa.');
+      return;
+    }
+    if (!formData.awayTeam) {
+      toast.error('Por favor, preencha o nome do time visitante.');
+      return;
+    }
+    if (!formData.market) {
+      toast.error('Por favor, selecione o mercado da aposta.');
+      return;
+    }
+    if (!formData.marketMinutes) {
+      toast.error('Por favor, selecione o intervalo de minutos.');
+      return;
+    }
+    if (!formData.odd) {
+      toast.error('Por favor, preencha a odd da aposta.');
+      return;
+    }
+    if (!formData.stake) {
+      toast.error('Por favor, preencha o valor da entrada (stake).');
+      return;
+    }
+    if (!formData.status) {
+      toast.error('Por favor, selecione o resultado da aposta.');
+      return;
+    }
     handleSubmit();
   };
 

@@ -15,9 +15,10 @@ Este arquivo serve como checklist e documentação das melhorias planejadas para
   - *Solução*: Login via Google/Gmail, com aprovação manual do administrador.
 
 ## CHARLIE - Validação e Tratamento de Erros
-- [ ] **Validações e Erros**
+- [x] **Validações e Erros**
   - *Problema*: Validações básicas, erros não tratados adequadamente.
   - *Solução*: Melhorar mensagens de erro, validação de campos obrigatórios e feedback ao usuário.
+  - *Status*: Finalizado — mensagens de erro agora aparecem como Toasts explicativos.
 
 ## DELTA - Melhorias de Análise e Relatórios
 - [ ] **Dashboard Avançado com KPIs**
